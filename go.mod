@@ -1,4 +1,4 @@
-module github.com/marten-seemann/qtls-go1-16
+module gitlab.lrz.de/netintum/projects/gino/students/quic-tls
 
 go 1.16
 
