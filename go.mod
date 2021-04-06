@@ -1,4 +1,4 @@
-module github.com/marten-seemann/qtls-go1-16
+module github.com:tumi8/quic-tls.git
 
 go 1.16
 
