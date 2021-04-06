@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	if !structsEqual(&tls.ConnectionState{}, &connectionState{}) {
+	if !structsEqual(&tls.ConnectionState{}, &ConnectionState{}) {
 		panic("qtls.ConnectionState doesn't match")
 	}
 	if !structsEqual(&tls.ClientSessionState{}, &clientSessionState{}) {
@@ -24,7 +24,7 @@ func init() {
 	}
 }
 
-func toConnectionState(c connectionState) ConnectionState {
+func toConnectionState(c ConnectionState) ConnectionState {
 	return *(*ConnectionState)(unsafe.Pointer(&c))
 }
 
