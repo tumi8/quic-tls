@@ -1,4 +1,4 @@
-module gitlab.lrz.de/netintum/projects/gino/students/quic-tls
+module gitlab.lrz.de/netintum/projects/gino/students/quic-tls.git
 
 go 1.16
 
