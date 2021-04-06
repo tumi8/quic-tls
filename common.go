@@ -224,10 +224,10 @@ const (
 // include downgrade canaries even if it's using its highers supported version.
 var testingOnlyForceDowngradeCanary bool
 
-type ConnectionState = tls.ConnectionState
+// type ConnectionState = tls.ConnectionState
 
 // ConnectionState records basic TLS details about the connection.
-type connectionState struct {
+type ConnectionState struct {
 	// Version is the TLS version used by the connection (e.g. VersionTLS12).
 	Version uint16
 
@@ -279,6 +279,16 @@ type connectionState struct {
 	// OCSPResponse is a stapled Online Certificate Status Protocol (OCSP)
 	// response provided by the peer for the leaf certificate, if any.
 	OCSPResponse []byte
+
+	ServerExtensions            []Extension
+	ServerEncryptedExtensions   []Extension
+	ServerCertRequestExtensions []Extension
+	HelloRetryRequestExtensions []Extension
+	CertificateExtensions       []Extension
+	SendAlerts                  []Alert
+	RecvAlerts                  []Alert
+	Errors                      []error
+	HandshakeRecordCounts       [][]uint16
 
 	// TLSUnique contains the "tls-unique" channel binding value (see RFC 5929,
 	// Section 3). This value will be nil for TLS 1.3 connections and for all

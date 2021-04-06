@@ -123,6 +123,19 @@ type Conn struct {
 	used0RTT bool
 
 	tmp [16]byte
+
+	serverExtensions            []Extension
+	serverEncryptedExtensions   []Extension
+	serverCertRequestExtensions []Extension
+	helloRetryRequestExtensions []Extension
+	certificateExtensions       []Extension
+
+	sendAlerts []alert
+	recvAlerts []alert
+
+	handshakeRecordCounts [][]uint16
+
+	errors []error
 }
 
 // Access to net.Conn methods.
@@ -1477,7 +1490,7 @@ func (c *Conn) ConnectionStateWith0RTT() ConnectionStateWith0RTT {
 }
 
 func (c *Conn) connectionStateLocked() ConnectionState {
-	var state connectionState
+	var state ConnectionState
 	state.HandshakeComplete = c.handshakeComplete()
 	state.Version = c.vers
 	state.NegotiatedProtocol = c.clientProtocol
@@ -1501,7 +1514,27 @@ func (c *Conn) connectionStateLocked() ConnectionState {
 	} else {
 		state.ekm = c.ekm
 	}
+
+	// TLS analysis
+	state.ServerExtensions = c.serverExtensions
+	state.ServerEncryptedExtensions = c.serverEncryptedExtensions
+	state.ServerCertRequestExtensions = c.serverCertRequestExtensions
+	state.HelloRetryRequestExtensions = c.helloRetryRequestExtensions
+	state.CertificateExtensions = c.certificateExtensions
+	state.SendAlerts = parseAlerts(c.sendAlerts)
+	state.RecvAlerts = parseAlerts(c.recvAlerts)
+	state.Errors = c.errors
+	state.HandshakeRecordCounts = c.handshakeRecordCounts
+
 	return toConnectionState(state)
+}
+
+func parseAlerts(alerts []alert) []Alert {
+	result := make([]Alert, len(alerts))
+	for i := range alerts {
+		result[i] = Alert(alerts[i])
+	}
+	return result
 }
 
 // OCSPResponse returns the stapled OCSP response from the TLS server, if
