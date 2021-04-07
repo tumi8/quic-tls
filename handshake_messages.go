@@ -1179,6 +1179,8 @@ func (m *certificateRequestMsgTLS13) unmarshal(data []byte, conn *Conn) bool {
 		return false
 	}
 
+	conn.serverCertRequestExtensions = make([]Extension, 0)
+
 	for !extensions.Empty() {
 		var extension uint16
 		var extData cryptobyte.String
@@ -1186,6 +1188,8 @@ func (m *certificateRequestMsgTLS13) unmarshal(data []byte, conn *Conn) bool {
 			!extensions.ReadUint16LengthPrefixed(&extData) {
 			return false
 		}
+
+		conn.serverCertRequestExtensions = append(conn.serverCertRequestExtensions, Extension{Type: extension, Data: extData})
 
 		switch extension {
 		case extensionStatusRequest:
@@ -1395,7 +1399,7 @@ func (m *certificateMsgTLS13) unmarshal(data []byte, conn *Conn) bool {
 	var context cryptobyte.String
 	if !s.Skip(4) || // message type and uint24 length field
 		!s.ReadUint8LengthPrefixed(&context) || !context.Empty() ||
-		!unmarshalCertificate(&s, &m.certificate) ||
+		!unmarshalCertificate(&s, &m.certificate, conn) ||
 		!s.Empty() {
 		return false
 	}
@@ -1406,7 +1410,7 @@ func (m *certificateMsgTLS13) unmarshal(data []byte, conn *Conn) bool {
 	return true
 }
 
-func unmarshalCertificate(s *cryptobyte.String, certificate *Certificate) bool {
+func unmarshalCertificate(s *cryptobyte.String, certificate *Certificate, conn *Conn) bool {
 	var certList cryptobyte.String
 	if !s.ReadUint24LengthPrefixed(&certList) {
 		return false
@@ -1419,6 +1423,7 @@ func unmarshalCertificate(s *cryptobyte.String, certificate *Certificate) bool {
 			return false
 		}
 		certificate.Certificate = append(certificate.Certificate, cert)
+		conn.certificateExtensions = make([]Extension, 0)
 		for !extensions.Empty() {
 			var extension uint16
 			var extData cryptobyte.String
@@ -1430,6 +1435,8 @@ func unmarshalCertificate(s *cryptobyte.String, certificate *Certificate) bool {
 				// This library only supports OCSP and SCT for leaf certificates.
 				continue
 			}
+
+			conn.certificateExtensions = append(conn.certificateExtensions, Extension{Extension: extension, Data: extData})
 
 			switch extension {
 			case extensionStatusRequest:
