@@ -1,7 +1,6 @@
 package qtls
 
 import (
-	"crypto/tls"
 	"reflect"
 	"unsafe"
 )
@@ -10,18 +9,18 @@ func init() {
 	// if !structsEqual(&tls.ConnectionState{}, &ConnectionState{}) {
 	// 	panic("qtls.ConnectionState doesn't match")
 	// }
-	if !structsEqual(&tls.ClientSessionState{}, &clientSessionState{}) {
-		panic("qtls.ClientSessionState doesn't match")
-	}
-	if !structsEqual(&tls.CertificateRequestInfo{}, &certificateRequestInfo{}) {
-		panic("qtls.CertificateRequestInfo doesn't match")
-	}
-	if !structsEqual(&tls.Config{}, &config{}) {
-		panic("qtls.Config doesn't match")
-	}
-	if !structsEqual(&tls.ClientHelloInfo{}, &clientHelloInfo{}) {
-		panic("qtls.ClientHelloInfo doesn't match")
-	}
+	// if !structsEqual(&tls.ClientSessionState{}, &clientSessionState{}) {
+	// 	panic("qtls.ClientSessionState doesn't match")
+	// }
+	// if !structsEqual(&tls.CertificateRequestInfo{}, &certificateRequestInfo{}) {
+	// 	panic("qtls.CertificateRequestInfo doesn't match")
+	// }
+	// if !structsEqual(&tls.Config{}, &config{}) {
+	// 	panic("qtls.Config doesn't match")
+	// }
+	// if !structsEqual(&tls.ClientHelloInfo{}, &clientHelloInfo{}) {
+	// 	panic("qtls.ClientHelloInfo doesn't match")
+	// }
 }
 
 func toConnectionState(c ConnectionState) ConnectionState {
