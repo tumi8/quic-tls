@@ -140,6 +140,11 @@ type keyShare struct {
 	data  []byte
 }
 
+type KeyShare struct {
+	Group CurveID
+	Data  []byte
+}
+
 // TLS 1.3 PSK Key Exchange Modes. See RFC 8446, Section 4.2.9.
 const (
 	pskModePlain uint8 = 0
@@ -280,6 +285,8 @@ type ConnectionState struct {
 	// response provided by the peer for the leaf certificate, if any.
 	OCSPResponse []byte
 
+	ServerHello                 *ServerHelloMsg
+	ClientHello                 ClientHelloMsg
 	ServerExtensions            []Extension
 	ServerEncryptedExtensions   []Extension
 	ServerCertRequestExtensions []Extension

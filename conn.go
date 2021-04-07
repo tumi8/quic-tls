@@ -124,6 +124,9 @@ type Conn struct {
 
 	tmp [16]byte
 
+	serverHello *serverHelloMsg
+	clientHello *clientHelloMsg
+
 	serverExtensions            []Extension
 	serverEncryptedExtensions   []Extension
 	serverCertRequestExtensions []Extension
@@ -1522,11 +1525,16 @@ func (c *Conn) connectionStateLocked() ConnectionState {
 	}
 
 	// TLS analysis
+	if c.serverHello != nil {
+		newHello := NewServerHelloMsg(c.serverHello)
+		state.ServerHello = &newHello
+	}
 	state.ServerExtensions = c.serverExtensions
 	state.ServerEncryptedExtensions = c.serverEncryptedExtensions
 	state.ServerCertRequestExtensions = c.serverCertRequestExtensions
 	state.HelloRetryRequestExtensions = c.helloRetryRequestExtensions
 	state.CertificateExtensions = c.certificateExtensions
+	state.ClientHello = NewClientHelloMsg(c.clientHello)
 	state.SendAlerts = parseAlerts(c.sendAlerts)
 	state.RecvAlerts = parseAlerts(c.recvAlerts)
 	state.Errors = c.errors
