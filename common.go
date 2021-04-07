@@ -303,6 +303,14 @@ type ConnectionState struct {
 	ekm func(label string, context []byte, length int) ([]byte, error)
 }
 
+// ExportKeyingMaterial returns length bytes of exported key material in a new
+// slice as defined in RFC 5705. If context is nil, it is not used as part of
+// the seed. If the connection was set to allow renegotiation via
+// Config.Renegotiation, this function will return an error.
+func (cs *ConnectionState) ExportKeyingMaterial(label string, context []byte, length int) ([]byte, error) {
+	return cs.ekm(label, context, length)
+}
+
 type ConnectionStateWith0RTT struct {
 	ConnectionState
 
@@ -1371,7 +1379,7 @@ func leafCertificate(c *Certificate) (*x509.Certificate, error) {
 
 type handshakeMessage interface {
 	marshal() []byte
-	unmarshal([]byte) bool
+	unmarshal([]byte, *Conn) bool
 }
 
 // lruSessionCache is a ClientSessionCache implementation that uses an LRU

@@ -1059,6 +1059,7 @@ func (c *Conn) writeRecord(typ recordType, data []byte) (int, error) {
 // readHandshake reads the next handshake message from
 // the record layer.
 func (c *Conn) readHandshake() (interface{}, error) {
+	var headerReads, totalReads uint16
 	var data []byte
 	if c.extraConfig != nil && c.extraConfig.AlternativeRecordLayer != nil {
 		var err error
@@ -1068,6 +1069,8 @@ func (c *Conn) readHandshake() (interface{}, error) {
 		}
 	} else {
 		for c.hand.Len() < 4 {
+			headerReads += 1
+			totalReads += 1
 			if err := c.readRecord(); err != nil {
 				return nil, err
 			}
@@ -1086,6 +1089,9 @@ func (c *Conn) readHandshake() (interface{}, error) {
 		}
 		data = c.hand.Next(4 + n)
 	}
+
+	c.handshakeRecordCounts = append(c.handshakeRecordCounts, []uint16{uint16(data[0]), headerReads, totalReads})
+
 	var m handshakeMessage
 	switch data[0] {
 	case typeHelloRequest:
@@ -1143,7 +1149,7 @@ func (c *Conn) readHandshake() (interface{}, error) {
 	// so pass in a fresh copy that won't be overwritten.
 	data = append([]byte(nil), data...)
 
-	if !m.unmarshal(data) {
+	if !m.unmarshal(data, c) {
 		return nil, c.in.setErrorLocked(c.sendAlert(alertUnexpectedMessage))
 	}
 	return m, nil

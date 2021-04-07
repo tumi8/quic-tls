@@ -7,6 +7,7 @@ package qtls
 import (
 	"bytes"
 	"crypto/rsa"
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/binary"
@@ -1521,7 +1522,7 @@ func TestHostnameInSNI(t *testing.T) {
 		s.Close()
 
 		var m clientHelloMsg
-		if !m.unmarshal(record) {
+		if !m.unmarshal(record, nil) {
 			t.Errorf("unmarshaling ClientHello for %q failed", tt.in)
 			continue
 		}
@@ -1590,7 +1591,7 @@ func TestVerifyConnection(t *testing.T) {
 }
 
 func testVerifyConnection(t *testing.T, version uint16) {
-	checkFields := func(c ConnectionState, called *int, errorType string) error {
+	checkFields := func(c tls.ConnectionState, called *int, errorType string) error {
 		if c.Version != version {
 			return fmt.Errorf("%s: got Version %v, want %v", errorType, c.Version, version)
 		}
@@ -1625,7 +1626,7 @@ func testVerifyConnection(t *testing.T, version uint16) {
 			name: "RequireAndVerifyClientCert",
 			configureServer: func(config *Config, called *int) {
 				config.ClientAuth = RequireAndVerifyClientCert
-				config.VerifyConnection = func(c ConnectionState) error {
+				config.VerifyConnection = func(c tls.ConnectionState) error {
 					*called++
 					if l := len(c.PeerCertificates); l != 1 {
 						return fmt.Errorf("server: got len(PeerCertificates) = %d, wanted 1", l)
@@ -1637,7 +1638,7 @@ func testVerifyConnection(t *testing.T, version uint16) {
 				}
 			},
 			configureClient: func(config *Config, called *int) {
-				config.VerifyConnection = func(c ConnectionState) error {
+				config.VerifyConnection = func(c tls.ConnectionState) error {
 					*called++
 					if l := len(c.PeerCertificates); l != 1 {
 						return fmt.Errorf("client: got len(PeerCertificates) = %d, wanted 1", l)
@@ -1665,7 +1666,7 @@ func testVerifyConnection(t *testing.T, version uint16) {
 			configureServer: func(config *Config, called *int) {
 				config.ClientAuth = RequireAnyClientCert
 				config.InsecureSkipVerify = true
-				config.VerifyConnection = func(c ConnectionState) error {
+				config.VerifyConnection = func(c tls.ConnectionState) error {
 					*called++
 					if l := len(c.PeerCertificates); l != 1 {
 						return fmt.Errorf("server: got len(PeerCertificates) = %d, wanted 1", l)
@@ -1678,7 +1679,7 @@ func testVerifyConnection(t *testing.T, version uint16) {
 			},
 			configureClient: func(config *Config, called *int) {
 				config.InsecureSkipVerify = true
-				config.VerifyConnection = func(c ConnectionState) error {
+				config.VerifyConnection = func(c tls.ConnectionState) error {
 					*called++
 					if l := len(c.PeerCertificates); l != 1 {
 						return fmt.Errorf("client: got len(PeerCertificates) = %d, wanted 1", l)
@@ -1705,13 +1706,13 @@ func testVerifyConnection(t *testing.T, version uint16) {
 			name: "NoClientCert",
 			configureServer: func(config *Config, called *int) {
 				config.ClientAuth = NoClientCert
-				config.VerifyConnection = func(c ConnectionState) error {
+				config.VerifyConnection = func(c tls.ConnectionState) error {
 					*called++
 					return checkFields(c, called, "server")
 				}
 			},
 			configureClient: func(config *Config, called *int) {
-				config.VerifyConnection = func(c ConnectionState) error {
+				config.VerifyConnection = func(c tls.ConnectionState) error {
 					*called++
 					return checkFields(c, called, "client")
 				}
@@ -1721,14 +1722,14 @@ func testVerifyConnection(t *testing.T, version uint16) {
 			name: "RequestClientCert",
 			configureServer: func(config *Config, called *int) {
 				config.ClientAuth = RequestClientCert
-				config.VerifyConnection = func(c ConnectionState) error {
+				config.VerifyConnection = func(c tls.ConnectionState) error {
 					*called++
 					return checkFields(c, called, "server")
 				}
 			},
 			configureClient: func(config *Config, called *int) {
 				config.Certificates = nil // clear the client cert
-				config.VerifyConnection = func(c ConnectionState) error {
+				config.VerifyConnection = func(c tls.ConnectionState) error {
 					*called++
 					if l := len(c.PeerCertificates); l != 1 {
 						return fmt.Errorf("client: got len(PeerCertificates) = %d, wanted 1", l)
@@ -1834,7 +1835,7 @@ func testVerifyPeerCertificate(t *testing.T, version uint16) {
 		*called = true
 		return nil
 	}
-	verifyConnectionCallback := func(called *bool, isClient bool, c ConnectionState) error {
+	verifyConnectionCallback := func(called *bool, isClient bool, c tls.ConnectionState) error {
 		if l := len(c.PeerCertificates); l != 1 {
 			return fmt.Errorf("got len(PeerCertificates) = %d, wanted 1", l)
 		}
@@ -1947,13 +1948,13 @@ func testVerifyPeerCertificate(t *testing.T, version uint16) {
 		{
 			configureServer: func(config *Config, called *bool) {
 				config.InsecureSkipVerify = false
-				config.VerifyConnection = func(c ConnectionState) error {
+				config.VerifyConnection = func(c tls.ConnectionState) error {
 					return verifyConnectionCallback(called, false, c)
 				}
 			},
 			configureClient: func(config *Config, called *bool) {
 				config.InsecureSkipVerify = false
-				config.VerifyConnection = func(c ConnectionState) error {
+				config.VerifyConnection = func(c tls.ConnectionState) error {
 					return verifyConnectionCallback(called, true, c)
 				}
 			},
@@ -1975,7 +1976,7 @@ func testVerifyPeerCertificate(t *testing.T, version uint16) {
 		{
 			configureServer: func(config *Config, called *bool) {
 				config.InsecureSkipVerify = false
-				config.VerifyConnection = func(c ConnectionState) error {
+				config.VerifyConnection = func(c tls.ConnectionState) error {
 					return sentinelErr
 				}
 			},
@@ -1996,7 +1997,7 @@ func testVerifyPeerCertificate(t *testing.T, version uint16) {
 			},
 			configureClient: func(config *Config, called *bool) {
 				config.InsecureSkipVerify = false
-				config.VerifyConnection = func(c ConnectionState) error {
+				config.VerifyConnection = func(c tls.ConnectionState) error {
 					return sentinelErr
 				}
 			},
@@ -2012,7 +2013,7 @@ func testVerifyPeerCertificate(t *testing.T, version uint16) {
 				config.VerifyPeerCertificate = func(rawCerts [][]byte, validatedChains [][]*x509.Certificate) error {
 					return verifyPeerCertificateCallback(called, rawCerts, validatedChains)
 				}
-				config.VerifyConnection = func(c ConnectionState) error {
+				config.VerifyConnection = func(c tls.ConnectionState) error {
 					return sentinelErr
 				}
 			},
@@ -2041,7 +2042,7 @@ func testVerifyPeerCertificate(t *testing.T, version uint16) {
 				config.VerifyPeerCertificate = func(rawCerts [][]byte, validatedChains [][]*x509.Certificate) error {
 					return verifyPeerCertificateCallback(called, rawCerts, validatedChains)
 				}
-				config.VerifyConnection = func(c ConnectionState) error {
+				config.VerifyConnection = func(c tls.ConnectionState) error {
 					return sentinelErr
 				}
 			},
