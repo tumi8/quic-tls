@@ -1436,7 +1436,7 @@ func unmarshalCertificate(s *cryptobyte.String, certificate *Certificate, conn *
 				continue
 			}
 
-			conn.certificateExtensions = append(conn.certificateExtensions, Extension{Extension: extension, Data: extData})
+			conn.certificateExtensions = append(conn.certificateExtensions, Extension{Type: extension, Data: extData})
 
 			switch extension {
 			case extensionStatusRequest:
