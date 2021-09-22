@@ -1,4 +1,4 @@
-module github.com:tumi8/quic-tls.git
+module github.com/tumi8/quic-tls.git
 
 go 1.16
 
